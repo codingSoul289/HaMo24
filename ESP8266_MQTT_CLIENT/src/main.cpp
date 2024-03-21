@@ -17,7 +17,7 @@ WiFiClient espClient;
 PubSubClient client(espClient);
 
 // Topic to which ESP8266 will publish
-const char* topic = "esp8266/data";
+const char* channel = "esp8266/data";
 
 // Function to reconnect to MQTT broker
 void reconnect() {
@@ -25,7 +25,7 @@ void reconnect() {
   while (!client.connected()) {
     Serial.print("Attempting MQTT connection...");
     // Attempt to connect
-    if (client.connect("ESP8266Client","rushikesh","rushi2004")) {
+    if (client.connect("ESP8266Client",MQTT_username,MQTT_password)) {
       Serial.println("connected");
     } else {
       Serial.print("failed, rc=");
@@ -66,7 +66,7 @@ void loop() {
   // Send data
   float temperature = 25.5; // Example temperature data
   String payload = String(temperature);
-  client.publish(topic, payload.c_str());
+  client.publish(channel, payload.c_str());
 
   delay(5000); // Publish data every 5 seconds
 }
