@@ -32,6 +32,8 @@ long duration;
 float distanceCm;
 float distanceInch;
 
+bool thresh_flag;
+
 // Function to reconnect to MQTT broker
 void reconnect(){
 	// Loop until we're reconnected
@@ -52,6 +54,8 @@ void reconnect(){
 }
 
 void setup(){
+	pinMode(16, OUTPUT);
+	pinMode(5, OUTPUT);
 	Serial.begin(115200); // Starts the serial communication
 	// Connect to Wi-Fi
 	WiFi.begin(ssid, password);
@@ -61,7 +65,10 @@ void setup(){
 	while (WiFi.status() != WL_CONNECTED){
 		delay(500);
 		Serial.print("Wifi not connected! Retrying...");
+		digitalWrite(5, HIGH);
 	}
+
+	digitalWrite(5, LOW);
 
 	Serial.println("");
 	Serial.println("WiFi connected");
@@ -74,6 +81,9 @@ void setup(){
 	// Setup ultrasonic sensor
 	pinMode(TRIGGER_PIN, OUTPUT); // Sets the TRIGGER_PIN as an Output
 	pinMode(ECHO_PIN, INPUT);	  // Sets the ECHO_PIN as an Input
+	
+
+	thresh_flag = false;
 }
 
 void loop()
@@ -82,6 +92,7 @@ void loop()
 		reconnect();
 	}
 
+	digitalWrite(16, HIGH);
 	// Sensing distance using ultrasonic sensor
 	// Clears the TRIGGER_PIN
 	digitalWrite(TRIGGER_PIN, LOW);
@@ -109,12 +120,18 @@ void loop()
 	else threshold = false;
 
 	// Generate payload
-	String payload;
+	String payload="Stop right there. Back off.";
 
-	payload = "{\"th\":" + String(threshold) + ",\"loc\":" + String(UNIT_LOCATION) + ",\"pos\":" + String(UNIT_POSITION) + "}";
+	// payload = "{\"th\":" + String(threshold) + ",\"loc\":" + String(UNIT_LOCATION) + ",\"pos\":" + String(UNIT_POSITION) + ",\"msg\":\"Stop right there\"}";
 
 	// Send data
-	if(threshold) client.publish(channel, payload.c_str());
+	if (threshold && !thresh_flag){
+		client.publish(channel, payload.c_str());
+		thresh_flag = true;
+	}
+	else{
+		thresh_flag = false;
+	}
 	
-	delay(100); // Publish data every second
+	delay(1000);
 }
